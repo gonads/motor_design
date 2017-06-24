@@ -25,7 +25,7 @@ V = (pi*(Ro^2)*L)-(pi*(Ri^2)*L); % Fuel core volume
 M_F = Rho_F*V; % Fuel mass, (kg).
 Rt = 0.0045/2; % Throat radius, (m).
 At = pi*(Rt^2); % Throat area, (m^2).
-Re = 0.0045/2; % Exit radius, (m).
+Re = 0.005/2; % Exit radius, (m).
 Ae = pi*(Re^2); % Exit area, (m^2).
 ARact = Ae/At; % Exit area to throat area ratio.
 
@@ -38,15 +38,19 @@ Tt(1) = T0; % Chamber temperature to atmospheric, (K).
 Te(1) = T0; % Chamber temperature to atmospheric, (K).
 L(1) = L; % Initial length of fuel cure, (m).
 Ri(1) = Ri; % Initial burn radius, (m).
+Rb(1) = 0; % Initial burn rate, (m/s).
 V(1) = pi*(Ri(1)^2)*L(1); % Initial burn volume, (m^3).
 N(1) = (P(1)*V(1))/(R_F*T(1)); % Initial number of moles.
 Ve(1) = 0; % Initial exhaust velocity, (m/s^2).
 Rho_G(1) = N(1)/V(1); % Initial gas density, (kg/m^3).
+mdot1(1) = 0; % Initial mass flow rates, (kg/s).
+mdot2(1) = 0;
+mdot3(1) = 0;
 
 % Set time and loop counter.
 t(1) = 0; % Time starts at zero, (s).
 dt = 1E-4; % Time steps, (s).
-i = 1; % Index
+i = 1; % Index.
 
 % Identify nozzle behaviour.
 if Ae==At
@@ -58,10 +62,11 @@ else
     fMe = 0.001:0.001:10; 
     ARopt = (1./fMe).*(((1+(G_F-1./2).*fMe.^2)./(1+(G_F-1/2))).^((G_F+1/(2.*(G_F-1)))));
     AM = vertcat(fMe, ARopt);      
-    %{ Find the Mach number the selected area ratio satisfies. Remember that Pe
-       needs to match P0 for optimum performance, use Pratio to help. %}
+    % Find the Mach number the selected area ratio satisfies. Remember that Pe
+    %  needs to match P0 for optimum performance, use P_ratio to help. 
     Me = interp1(fMe, ARopt, ARact);
 end
+
 
 % Integrate from start of combustion to when chamber pressure back to external
 while true
@@ -69,11 +74,11 @@ while true
     t(i) = t(i-1) + dt;
 
     % Update chamber conditions and fuel properties
-    N(i) = N(i - 1) + (mdot2(i - 1)*dt); % Number of moles
-
+    N(i) = N(i - 1) + (mdot2(i - 1)*dt); % Number of moles.
+    Ri(i) = Ri(i-1) + (Rb(i-1)*dt); % Chamber radius.
+    
     % Combustion phase
-    if Ri(i + 1) <= Ro
-        Ri(i) = Ri(i-1) + (Rb(i-1)*dt);
+    if Ri(i) < Ro
         L(i) = L(i-1) - (Rb(i-1)*dt);
         V(i) = pi * (Ri(i)^2) * L(i); % Dynamic chamber volume.
         P(i) = (N(i)*R_F*T_F) / V(i); % Dynamic chamber pressure.
@@ -110,61 +115,66 @@ while true
     Cs (i) = (At*P(i))/mdot3(i); % Characteristic exhaust velocity.
 
     % Check if pressure returned to initial conditions
-    if P(i) >= P(1):
+    if P(i) <= P(1)
         break
     end
 end
 
 % Calculate average ratio of initial pressure to exit pressure
 PR = mean(P0./Pe);
-fprintf('Pratio = %f', PR);
+fprintf('P_ratio = %f', PR);
 fprintf('\n');
 
-% Only plot if not choked flow
+% Calculate burn time
+tb = max(t);
+fprintf('t_burn = %f', tb);
+fprintf('\n');
+
+% Only plot if Ae is not equal to At
 if Me ~= 1
+    figure; 
+    plot(fMe, ARopt);
     title('Mach Number vs. Exit/Throat Area Ratio');
     xlabel('Mach Number');
     ylabel('Area Ratio');
     set(gca,'TickDir','out');
     grid minor;
-    plot(fMe, ARopt);
 end
     
 % Plotting
 figure;
+plot(t, repelem(P0, length(t)), t, P, t, Pt, t, Pe);
 title('Pressures vs. Time');
 xlabel('Time (s)');
 ylabel('Pressure (Pa)');
 set(gca,'TickDir','out');
 grid minor;
 legend('P0','PC', 'PT', 'PE');
-plot(t, repelem(P0, length(t)), t), P, t), Pt, t, Pe);
 
 figure;
+plot(t, repelem(T0, length(t)), t, T, t, Tt, t, Te); 
 title('Temperatures vs. Time');
 xlabel('Time (s)');
 ylabel('Temperature (K)');
 set(gca,'TickDir','out');
 grid minor;
 legend('T0','TC', 'TT', 'TE');
-plot(t, repelem(T0, length(t)), t, T, t, Tt, t, Te); 
 
 figure;
-title('Mass-Flow Rates vs. Time');
+plot(t, mdot3);
+title('Mass-Flow Rate vs. Time');
 xlabel('Time (s)');
 ylabel('Mass Flow Rate (kg/s)');
 set(gca,'TickDir','out');
 grid minor;
-legend('MdotC','MdotE', 'MdotT');
-plot(t, mdot1, t, abs(mdot2), t, mdot3);
 
 figure;
+plot(t, Rho_G);
 title('Gas Density vs. Time');
 xlabel('Time (s)');
 ylabel('Gas Density (kg/m^3)');
 set(gca,'TickDir','out');
 grid minor;
-plot(t, Rho_G);
 
 figure;
 plot(t, Rb);
@@ -175,42 +185,42 @@ set(gca,'TickDir','out');
 grid minor;
 
 figure;
+plot(t, V);
 title('Chamber Volume vs. Time');
 xlabel('Time (s)');
 ylabel('Volume (m^3)');
 set(gca,'TickDir','out');
 grid minor;
-plot(t, V);
 
 figure;
+plot(t, Ri);
 title('Chamber Radius vs. Time');
 xlabel('Time (s)');
 ylabel('Radius (m)');
 set(gca,'TickDir','out');
 grid minor;
-plot(t(1:length(Ri)), Ri);
 
 figure;
+plot(t, F);
 title('Thrust vs. Time');
 xlabel('Time (s)');
 ylabel('Thrust (N)');
 set(gca,'TickDir','out');
 grid minor;
-plot(t, F);
 
 figure;
+plot(t, ISP);
 title('Specific Impukse vs. Time');
 xlabel('Time (s)');
 ylabel('Specific Impulse (s)');
 set(gca,'TickDir','out');
 grid minor;
-plot(t, ISP);
 
 figure;
+plot(t, Ve, t, Cs);
 title('Velocities vs. Time');
 xlabel('Time (s)');
 ylabel('Velocity (m/s)');
 set(gca,'TickDir','out');
 grid minor;
 legend('Ve','C*');
-plot(t, Ve, t, Cs);
