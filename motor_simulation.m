@@ -127,8 +127,8 @@ fprintf('\n');
 
 % Calculate burn time
 tb = max(t);
-fprintf('t_burn = %f', tb);
-fprintf('\n');
+fprintf('t_burn = %f', tb); 
+fprintf(' s'); fprintf('\n');
 
 % Only plot if Ae is not equal to At
 if Me ~= 1
@@ -143,7 +143,11 @@ end
     
 % Plotting
 figure;
-plot(t, repelem(P0, length(t)), t, P, t, Pt, t, Pe);
+r = P0;
+c = r';
+cc = c(:,ones(length(t), 1));
+rp = cc(:)';
+plot(t, rp, t, P, t, Pt, t, Pe);
 title('Pressures vs. Time');
 xlabel('Time (s)');
 ylabel('Pressure (Pa)');
@@ -152,7 +156,11 @@ grid minor;
 legend('P0','PC', 'PT', 'PE');
 
 figure;
-plot(t, repelem(T0, length(t)), t, T, t, Tt, t, Te); 
+y = T0;
+d = y';
+dd = d(:,ones(length(t), 1));
+rt = dd(:)';
+plot(t, rt, t, T, t, Tt, t, Te); 
 title('Temperatures vs. Time');
 xlabel('Time (s)');
 ylabel('Temperature (K)');
