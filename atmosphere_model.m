@@ -2,6 +2,8 @@
 
 function [Ta, p, rho, a] = atmosphere_model(H)
 
+close all; clear all; clc;
+
 G0 = 6.67408E-11; % Gravitational constant, (m^3/kg.s^2).
 M0 = 5.972E24; % Mass of Earth, (kg).
 R0 = 6371E3; % Radius of Earth, (m).
