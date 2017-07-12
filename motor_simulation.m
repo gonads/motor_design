@@ -17,15 +17,15 @@ a = 7.77; % Fuel burn rate coefficient.
 n = -0.013; % Fuel pressure exponent.
 
 % Motor properties
-Ro = 0.0342/2; % Fuel core outer radius, (m).
-Ri = 0.015/2; % Fuel core inner radius, (m).
-L = 0.0705; % Fuel core length, (m).
+Ro = 0.019/2; % Fuel core outer radius, (m).
+Ri = 0.004/2; % Fuel core inner radius, (m).
+L = 0.1; % Fuel core length, (m).
 A = 2*pi*Ri*L; % Fuel burn area, (m^2).
 V = (pi*(Ro^2)*L)-(pi*(Ri^2)*L); % Fuel core volume
-M_F = Rho_F*V; % Fuel mass, (kg).
-Rt = 0.0045/2; % Throat radius, (m).
+M_F = Rho_F*V % Fuel mass, (kg).
+Rt = 0.004/2; % Throat radius, (m).
 At = pi*(Rt^2); % Throat area, (m^2).
-Re = 0.005/2; % Exit radius, (m).
+Re = 0.013/2; % Exit radius, (m).
 Ae = pi*(Re^2); % Exit area, (m^2).
 ARact = Ae/At; % Exit area to throat area ratio.
 
@@ -59,7 +59,7 @@ if Ae==At
 else
 
     % Find the relationship between Mach number and area ratio.
-    fMe = 0.001:0.001:10; 
+    fMe = 0.001:0.001:100; 
     ARopt = (1./fMe).*(((1+(G_F-1./2).*fMe.^2)./(1+(G_F-1/2))).^((G_F+1/(2.*(G_F-1)))));
     AM = vertcat(fMe, ARopt);      
     % Find the Mach number the selected area ratio satisfies. Remember that Pe
