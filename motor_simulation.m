@@ -218,7 +218,7 @@ grid minor;
 
 figure;
 plot(t, ISP);
-title('Specific Impukse vs. Time');
+title('Specific Impulse vs. Time');
 xlabel('Time (s)');
 ylabel('Specific Impulse (s)');
 set(gca,'TickDir','out');
